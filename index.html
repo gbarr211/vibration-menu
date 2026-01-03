@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Vibration Bar - Digital Drinks Menu">
+    <meta name="theme-color" content="#22283f">
+    <title>Vibration - Drinks Menu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background-color: #22283f;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #22283f;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(212, 175, 55, 0.2);
+            border-top-color: #d4af37;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            color: #d4af37;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        #menu-container {
+            width: 100%;
+            max-width: 794px;
+            background-color: #22283f;
+            position: relative;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        #menu-container.loaded {
+            opacity: 1;
+        }
+
+        #menu-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+
+        body {
+            overscroll-behavior-y: contain;
+        }
+
+        .error-message {
+            display: none;
+            color: #e74c3c;
+            padding: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .scroll-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(212, 175, 55, 0.6);
+            font-size: 14px;
+            animation: fadeOut 3s ease forwards;
+            pointer-events: none;
+        }
+
+        @keyframes fadeOut {
+            0%, 70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        #menu-container::after {
+            content: '';
+            display: block;
+            height: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="loader"></div>
+        <div class="loading-text">Loading Menu...</div>
+    </div>
+
+    <div id="menu-container">
+        <img id="menu-image" src="vibration-menu-full.png" alt="Vibration Drinks Menu">
+        <div class="error-message" id="error-message">
+            Unable to load menu. Please check your connection.
+        </div>
+    </div>
+
+    <div class="scroll-hint">Scroll to view full menu ↓</div>
+
+    <script>
+        const menuImage = document.getElementById('menu-image');
+        const loading = document.getElementById('loading');
+        const menuContainer = document.getElementById('menu-container');
+        const errorMessage = document.getElementById('error-message');
+
+        menuImage.onload = function() {
+            setTimeout(() => {
+                loading.classList.add('hidden');
+                menuContainer.classList.add('loaded');
+            }, 500);
+        };
+
+        menuImage.onerror = function() {
+            loading.classList.add('hidden');
+            errorMessage.classList.add('show');
+        };
+
+        let startY = 0;
+        document.addEventListener('touchstart', function(e) {
+            startY = e.touches[0].pageY;
+        }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            const y = e.touches[0].pageY;
+            if (window.scrollY === 0 && y > startY) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>
